@@ -3,7 +3,7 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
-name = "example-store"
+name = "sqlite-haystack"
 dynamic = ["version"]
 description = ''
 readme = "README.md"
@@ -11,7 +11,7 @@ requires-python = ">=3.7"
 license = "Apache-2.0"
 keywords = []
 authors = [
-  { name = "John Doe", email = "jd@example.com" },
+  { name = "Alan Meeson", email = "am@carefullycalculated.co.uk" },
 ]
 classifiers = [
   "Development Status :: 4 - Beta",
@@ -27,15 +27,17 @@ classifiers = [
 dependencies = [
   "haystack-ai",
   "typing_extensions",
+  "sentence-transformers",
+  "sqlite-vss"
 ]
 
 [project.urls]
-Documentation = "https://github.com/unknown/example-store#readme"
-Issues = "https://github.com/unknown/example-store/issues"
-Source = "https://github.com/unknown/example-store"
+Documentation = "https://github.com/alanmeeson/sqlite-haystack#readme"
+Issues = "https://github.com/alanmeeson/sqlite-haystack/issues"
+Source = "https://github.com/alanmeeson/sqlite-haystack"
 
 [tool.hatch.version]
-path = "src/example_store/__about__.py"
+path = "src/sqlite_haystack/__about__.py"
 
 [tool.hatch.envs.default]
 dependencies = [
@@ -65,7 +67,7 @@ dependencies = [
   "ruff>=0.0.243",
 ]
 [tool.hatch.envs.lint.scripts]
-typing = "mypy --install-types --non-interactive {args:src/example_store tests}"
+typing = "mypy --install-types --non-interactive {args:src/sqlite_haystack tests}"
 style = [
   "ruff {args:.}",
   "black --check --diff {args:.}",
@@ -134,7 +136,7 @@ unfixable = [
 ]
 
 [tool.ruff.isort]
-known-first-party = ["example_store"]
+known-first-party = ["sqlite_haystack"]
 
 [tool.ruff.flake8-tidy-imports]
 ban-relative-imports = "all"
@@ -144,7 +146,7 @@ ban-relative-imports = "all"
 "tests/**/*" = ["PLR2004", "S101", "TID252"]
 
 [tool.coverage.run]
-source_pkgs = ["example_store", "tests"]
+source_pkgs = ["sqlite_haystack", "tests"]
 branch = true
 parallel = true
 omit = [
@@ -152,8 +154,8 @@ omit = [
 ]
 
 [tool.coverage.paths]
-example_store = ["src/example_store", "*/example-store/src/example_store"]
-tests = ["tests", "*/example-store/tests"]
+example_store = ["src/sqlite_haystack", "*/sqlite-haystack/src/sqlite_haystack"]
+tests = ["tests", "*/sqlite-haystack/tests"]
 
 [tool.coverage.report]
 exclude_lines = [
