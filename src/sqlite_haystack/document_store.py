@@ -330,8 +330,7 @@ class SQLiteDocumentStore(DocumentStore):
         query_embedding: List[float],
         filters: Optional[Dict[str, Any]] = None,
         top_k: Optional[int] = 10,
-        *,
-        scale_score: Optional[bool] = False,
+        num_candidates: Optional[int] = None,
     ) -> List[Document]:
         """
         Retrieves documents that are most similar to the query embedding using a vector similarity metric.
@@ -339,7 +338,7 @@ class SQLiteDocumentStore(DocumentStore):
         :param query_embedding: Embedding of the query.
         :param filters: A dictionary with filters to narrow down the search space.
         :param top_k: The number of top documents to retrieve. Default is 10.
-        :param scale_score: Whether to scale the scores of the retrieved Documents. Default is False.
+        :param num_candidates: The number of documents to select with the embedding search, which are then filtered.
 
         :return: A list of the top_k documents most relevant to the query.
         """
@@ -356,6 +355,15 @@ class SQLiteDocumentStore(DocumentStore):
         if top_k:
             limit_subclause = f"LIMIT {top_k!s}"
 
+        if num_candidates:
+            embedding_subclause = "vss_search(embedding, vss_search_params(?, ?))"
+            params.append(query_embedding)
+            params.append(num_candidates)
+        else:
+            # Add the query to the parameter set
+            embedding_subclause = "vss_search(embedding, vss_search_params(?))"
+            params.append(query_embedding)
+
         query_statement = f"""
             SELECT a.id, a.content, a.dataframe, a.blob, a.meta, b.score, a.embedding
             FROM (
@@ -365,15 +373,12 @@ class SQLiteDocumentStore(DocumentStore):
             INNER JOIN (
                 SELECT rowid, distance as score
                 FROM document_vss
-                WHERE vss_search(embedding, vss_search_params(?))
+                WHERE {embedding_subclause}
             ) b
             ON a.id = b.id
             ORDER BY b.score
             {limit_subclause}
         """
-
-        # Add the query to the parameter set
-        params.append(query_embedding)
 
         # TODO: Does this really need to be a tuple?
         params = tuple(param for param in params)
@@ -385,8 +390,6 @@ class SQLiteDocumentStore(DocumentStore):
             doc_dict = dict(zip(fields, row))
             doc_dict["embedding"] = json.loads(doc_dict["embedding"]) if doc_dict["embedding"] else None
             doc_dict["meta"] = json.loads(doc_dict["meta"]) if doc_dict["meta"] else None
-            if scale_score:
-                doc_dict["score"] = float(expit(np.asarray(row[1] / 8)))
             doc = Document.from_dict(doc_dict)
             docs.append(doc)
 
