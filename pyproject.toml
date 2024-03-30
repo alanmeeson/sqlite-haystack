@@ -150,11 +150,11 @@ source_pkgs = ["sqlite_haystack", "tests"]
 branch = true
 parallel = true
 omit = [
-  "src/example_store/__about__.py",
+  "src/sqlite_haystack/__about__.py",
 ]
 
 [tool.coverage.paths]
-example_store = ["src/sqlite_haystack", "*/sqlite-haystack/src/sqlite_haystack"]
+sqlite_haystack = ["src/sqlite_haystack", "*/sqlite-haystack/src/sqlite_haystack"]
 tests = ["tests", "*/sqlite-haystack/tests"]
 
 [tool.coverage.report]
