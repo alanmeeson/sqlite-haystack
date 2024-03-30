@@ -24,7 +24,7 @@ class TestSQLiteDocumentStore(DocumentStoreBaseTests):
         This is the most basic requirement for the child class: provide
         an instance of this document store so the base class can use it.
         """
-        return SQLiteDocumentStore(database=":memory:", use_bm25=True, embedding_dims=384)
+        return SQLiteDocumentStore(database=":memory:")
 
     def test_write_documents(self, document_store: DocumentStore):
         """

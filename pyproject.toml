@@ -5,7 +5,7 @@ build-backend = "hatchling.build"
 [project]
 name = "sqlite-haystack"
 dynamic = ["version"]
-description = ''
+description = 'SQLite backed datastore and retrievers for Haystack 2.0'
 readme = "README.md"
 requires-python = ">=3.7"
 license = "Apache-2.0"
@@ -26,7 +26,11 @@ classifiers = [
 ]
 dependencies = [
   "haystack-ai",
-  "typing_extensions",
+  "typing_extensions"
+]
+
+[project.optional-dependencies]
+vss = [
   "sentence-transformers",
   "sqlite-vss"
 ]
