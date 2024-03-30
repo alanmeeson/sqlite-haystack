@@ -19,7 +19,7 @@ class SQLiteEmbeddingRetriever:
             document_store: SQLiteDocumentStore,
             filters: Optional[Dict[str, Any]] = None,
             top_k: Optional[int] = 10,
-            num_candidates: Optional[int] = None,
+            num_candidates: Optional[int] = 100,
     ):
         """
         Create the SQLiteEmbeddingRetriever component.
@@ -56,7 +56,7 @@ class SQLiteEmbeddingRetriever:
             query_embedding: List[float],
             filters: Optional[Dict[str, Any]] = None,
             top_k: Optional[int] = None,
-            num_candidates: Optional[int] = None,
+            num_candidates: Optional[int] = 100,
     ):
         """
         Run the InMemoryEmbeddingRetriever on the given input data.

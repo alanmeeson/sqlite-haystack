@@ -311,7 +311,7 @@ class SQLiteDocumentStore(DocumentStore):
         # TODO: Does this really need to be a tuple?
         params = tuple(param for param in params)
 
-        res = self._db.execute(query_statement, parameters=params)
+        res = self._db.execute(query_statement, params)
         fields = [f[0] for f in res.description]
         docs = []
         for row in res.fetchall():
@@ -330,7 +330,7 @@ class SQLiteDocumentStore(DocumentStore):
         query_embedding: List[float],
         filters: Optional[Dict[str, Any]] = None,
         top_k: Optional[int] = 10,
-        num_candidates: Optional[int] = None,
+        num_candidates: Optional[int] = 100,
     ) -> List[Document]:
         """
         Retrieves documents that are most similar to the query embedding using a vector similarity metric.
@@ -355,19 +355,14 @@ class SQLiteDocumentStore(DocumentStore):
         if top_k:
             limit_subclause = f"LIMIT {top_k!s}"
 
-        if num_candidates:
-            embedding_subclause = "vss_search(embedding, vss_search_params(?, ?))"
-            params.append(query_embedding)
-            params.append(num_candidates)
-        else:
-            # Add the query to the parameter set
-            embedding_subclause = "vss_search(embedding, vss_search_params(?))"
-            params.append(query_embedding)
+        embedding_subclause = "vss_search(embedding, vss_search_params(?, ?))"
+        params.append(json.dumps(query_embedding))
+        params.append(num_candidates)
 
         query_statement = f"""
             SELECT a.id, a.content, a.dataframe, a.blob, a.meta, b.score, a.embedding
             FROM (
-                SELECT * FROM document
+                SELECT rowid, id, content, dataframe, blob, meta, embedding FROM document
                 {filter_subclause}
             ) a
             INNER JOIN (
@@ -375,15 +370,19 @@ class SQLiteDocumentStore(DocumentStore):
                 FROM document_vss
                 WHERE {embedding_subclause}
             ) b
-            ON a.id = b.id
+            ON a.rowid = b.rowid
             ORDER BY b.score
             {limit_subclause}
         """
 
         # TODO: Does this really need to be a tuple?
-        params = tuple(param for param in params)
+        #params = tuple(param for param in params)
 
-        res = self._db.execute(query_statement, params)
+        try:
+            res = self._db.execute(query_statement, params)
+        except sqlite3.ProgrammingError as err:
+            print(params)
+            raise err
         fields = [f[0] for f in res.description]
         docs = []
         for row in res.fetchall():
@@ -427,12 +426,10 @@ def _create_db(
         """)
 
     if use_bm25:
-        #_create_bm25_index(db)
-        pass
+        _create_bm25_index(db)
 
     if embedding_dims:
-        #_create_vss_index(db, embedding_dims)
-        pass
+        _create_vss_index(db, embedding_dims)
 
     return db
 
@@ -441,10 +438,14 @@ def _create_bm25_index(db: sqlite3.Connection):
     """Creates the bm25 index table and triggers if they do not already exist."""
 
     # TODO: look at parameterising the configuration to allow for custom tokenizers, etc.
+    #db.execute("""
+    #        CREATE VIRTUAL TABLE IF NOT EXISTS document_fts
+    #        USING fts5("id", "content", tokenize = 'porter unicode61', content='document', content_rowid='rowid');
+    #    """)
     db.execute("""
-            CREATE VIRTUAL TABLE IF NOT EXISTS document_fts
-            USING fts5("id", "content", tokenize = 'porter unicode61', content='document', content_rowid='rowid');
-        """)
+                CREATE VIRTUAL TABLE IF NOT EXISTS document_fts
+                USING fts5("id", "content", tokenize = 'trigram', content='document', content_rowid='rowid');
+            """)
 
     # Creates triggers that update the index when the documents are added/removed/updated
     db.execute("""
