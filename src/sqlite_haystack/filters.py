@@ -1,6 +1,10 @@
 # SPDX-FileCopyrightText: 2024-present Alan Meeson <am@carefullycalculated.co.uk>
 #
 # SPDX-License-Identifier: Apache-2.0
+
+# Note: S608 warning for SQL injection vector is disabled, as SQL query construction is necessary for building the
+# queries for the filters.
+# TODO: find a better way of doing this that doesn't require string construction.
 import json
 from datetime import datetime
 from itertools import chain
@@ -95,7 +99,10 @@ def _parse_comparison_condition(condition: Dict[str, Any]) -> tuple[str, List[An
     return field, [value]
 
 
-def _treat_meta_field(field: str, value: Any) -> str:
+# TODO: determine if we need value for type determination, so leaving parameter here even though unused.
+
+
+def _treat_meta_field(field: str, value: Any) -> str:  # noqa: ARG001
     """
     Internal method that modifies the field str
     to make the meta JSONB field queryable.
@@ -207,24 +214,24 @@ def _less_than_equal(field: str, value: Any) -> tuple[str, Any]:
     return f"{field} <= ?", value
 
 
-def _not_in(field: str, value: Any) -> tuple[str, List]:
+def _not_in(field: str, value: Any) -> tuple[str, Any]:
     if not isinstance(value, list):
         msg = f"{field}'s value must be a list when using 'not in' comparator in Pinecone"
         raise FilterError(msg)
 
     # TODO: consider replacing with NOT IN
     value_json = json.dumps(value)
-    return f"{field} IS NULL OR {field} NOT IN (select value from json_each(?))", value_json
+    return f"{field} IS NULL OR {field} NOT IN (select value from json_each(?))", value_json  # noqa: S608
 
 
-def _in(field: str, value: Any) -> tuple[str, List]:
+def _in(field: str, value: Any) -> tuple[str, Any]:
     if not isinstance(value, list):
         msg = f"{field}'s value must be a list when using 'in' comparator in Pinecone"
         raise FilterError(msg)
 
     # TODO: consider replacing with IN
     value_json = json.dumps(value)
-    return f"{field} IN (select value from json_each(?))", value_json
+    return f"{field} IN (select value from json_each(?))", value_json  # noqa: S608
 
 
 COMPARISON_OPERATORS = {

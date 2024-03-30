@@ -5,10 +5,10 @@ import json
 import logging
 import os
 import sqlite3
-import sqlite_vss
 from typing import Any, Dict, Iterable, List, Literal, Optional, Union
 
 import numpy as np
+import sqlite_vss
 from haystack import Document, default_from_dict, default_to_dict
 from haystack.document_stores.errors import DuplicateDocumentError
 from haystack.document_stores.types import DocumentStore, DuplicatePolicy
@@ -40,7 +40,7 @@ class SQLiteDocumentStore(DocumentStore):
         *,
         use_bm25: Optional[bool] = True,
         embedding_dims: Optional[int] = None,
-        embedding_similarity_function: Literal["dot_product", "cosine"] = "dot_product"
+        embedding_similarity_function: Literal["dot_product", "cosine"] = "dot_product",
     ):
         """
         Initializes the DocumentStore.
@@ -55,7 +55,7 @@ class SQLiteDocumentStore(DocumentStore):
         self._embedding_dims = embedding_dims
         self.embedding_similarity_function = embedding_similarity_function
 
-    #def __del__(self):
+    # def __del__(self):
     #    """Close the connection when the object is discarded"""
     #
     #    # TODO: Do I really need to do this?
@@ -65,7 +65,7 @@ class SQLiteDocumentStore(DocumentStore):
         """
         Returns how many documents are present in the document store.
         """
-        count, = self._db.execute("""SELECT COUNT(1) FROM document""").fetchone()
+        (count,) = self._db.execute("""SELECT COUNT(1) FROM document""").fetchone()
         return count
 
     def filter_documents(self, filters: Optional[Dict[str, Any]] = None) -> List[Document]:
@@ -137,7 +137,7 @@ class SQLiteDocumentStore(DocumentStore):
 
         if filters:
             query, params = _convert_filters_to_where_clause_and_params(filters)
-            combined_query = f"SELECT * FROM document WHERE {query}"
+            combined_query = f"SELECT * FROM document WHERE {query}"  # noqa: S608
             res = self._db.execute(combined_query, params)
         else:
             res = self._db.execute("SELECT * FROM document")
@@ -168,9 +168,9 @@ class SQLiteDocumentStore(DocumentStore):
         :return: None
         """
         if (
-                not isinstance(documents, Iterable)
-                or isinstance(documents, str)
-                or any(not isinstance(doc, Document) for doc in documents)
+            not isinstance(documents, Iterable)
+            or isinstance(documents, str)
+            or any(not isinstance(doc, Document) for doc in documents)
         ):
             err = "Please provide a list of Documents."
             raise ValueError(err)
@@ -203,8 +203,9 @@ class SQLiteDocumentStore(DocumentStore):
                 doc["blob"],
                 json.dumps(doc["meta"]),
                 doc["score"],
-                json.dumps(doc["embedding"])
-            ) for doc in doc_dicts
+                json.dumps(doc["embedding"]),
+            )
+            for doc in doc_dicts
         ]
 
         try:
@@ -244,7 +245,7 @@ class SQLiteDocumentStore(DocumentStore):
             database=self._database,
             use_bm25=self._use_bm25,
             embedding_dims=self._embedding_dims,
-            embedding_similarity_function=self.embedding_similarity_function
+            embedding_similarity_function=self.embedding_similarity_function,
         )
         return data
 
@@ -257,12 +258,12 @@ class SQLiteDocumentStore(DocumentStore):
 
     # below here we have the methods particular to the SQLiteDocument Store
     def bm25_retrieval(
-            self,
-            query: str,
-            filters: Optional[Dict[str, Any]] = None,
-            top_k: Optional[int] = 10,
-            *,
-            scale_score: Optional[bool] = False
+        self,
+        query: str,
+        filters: Optional[Dict[str, Any]] = None,
+        top_k: Optional[int] = 10,
+        *,
+        scale_score: Optional[bool] = False,
     ) -> List[Document]:
         """
         Retrieves documents that are most relevant to the query using BM25 algorithm.
@@ -303,13 +304,10 @@ class SQLiteDocumentStore(DocumentStore):
             ON a.id = b.id
             ORDER BY b.score
             {limit_subclause}
-        """
+        """  # noqa: S608
 
         # Add the query to the parameter set
         params.append(query)
-
-        # TODO: Does this really need to be a tuple?
-        params = tuple(param for param in params)
 
         res = self._db.execute(query_statement, params)
         fields = [f[0] for f in res.description]
@@ -373,16 +371,10 @@ class SQLiteDocumentStore(DocumentStore):
             ON a.rowid = b.rowid
             ORDER BY b.score
             {limit_subclause}
-        """
+        """  # noqa: S608
 
-        # TODO: Does this really need to be a tuple?
-        #params = tuple(param for param in params)
+        res = self._db.execute(query_statement, params)
 
-        try:
-            res = self._db.execute(query_statement, params)
-        except sqlite3.ProgrammingError as err:
-            print(params)
-            raise err
         fields = [f[0] for f in res.description]
         docs = []
         for row in res.fetchall():
@@ -396,10 +388,7 @@ class SQLiteDocumentStore(DocumentStore):
 
 
 def _create_db(
-        database: Union[str, os.PathLike],
-        *,
-        use_bm25: Optional[bool] = True,
-        embedding_dims: Optional[int] = None
+    database: Union[str, os.PathLike], *, use_bm25: Optional[bool] = True, embedding_dims: Optional[int] = None
 ) -> sqlite3.Connection:
     """Opens or Creates the SQLite3 database, and ensures the appropriate tables and indexes are present.
 
@@ -409,11 +398,13 @@ def _create_db(
     :return: Connection to SQLite database
     """
     db = sqlite3.connect(database)
-    db.enable_load_extension(True)
-    sqlite_vss.load(db)
+    if embedding_dims:
+        db.enable_load_extension(True)
+        sqlite_vss.load(db)
 
     # Check if documents table exists and create if it doesn't
-    db.execute("""
+    db.execute(
+        """
             CREATE TABLE IF NOT EXISTS document(
                 id TEXT NOT NULL PRIMARY KEY,
                 content TEXT,
@@ -423,7 +414,8 @@ def _create_db(
                 score FLOAT,
                 embedding JSON
             )
-        """)
+        """
+    )
 
     if use_bm25:
         _create_bm25_index(db)
@@ -438,57 +430,75 @@ def _create_bm25_index(db: sqlite3.Connection):
     """Creates the bm25 index table and triggers if they do not already exist."""
 
     # TODO: look at parameterising the configuration to allow for custom tokenizers, etc.
-    #db.execute("""
+    # db.execute("""
     #        CREATE VIRTUAL TABLE IF NOT EXISTS document_fts
     #        USING fts5("id", "content", tokenize = 'porter unicode61', content='document', content_rowid='rowid');
     #    """)
-    db.execute("""
+    db.execute(
+        """
                 CREATE VIRTUAL TABLE IF NOT EXISTS document_fts
                 USING fts5("id", "content", tokenize = 'trigram', content='document', content_rowid='rowid');
-            """)
+            """
+    )
 
     # Creates triggers that update the index when the documents are added/removed/updated
-    db.execute("""
+    db.execute(
+        """
             CREATE TRIGGER IF NOT EXISTS document_ai_bm25 AFTER INSERT ON document BEGIN
                 INSERT INTO document_fts(rowid, content) VALUES (new.rowid, new.content);
             END;
-        """)
-    db.execute("""
+        """
+    )
+    db.execute(
+        """
         CREATE TRIGGER IF NOT EXISTS document_ad_bm25 AFTER DELETE ON document BEGIN
           INSERT INTO document_fts(document_fts, rowid, content) VALUES('delete', old.rowid, old.content);
         END;
-        """)
-    db.execute("""
+        """
+    )
+    db.execute(
+        """
         CREATE TRIGGER IF NOT EXISTS document_au_bm25 AFTER UPDATE ON document BEGIN
           INSERT INTO document_fts(document_fts, rowid, content) VALUES('delete', old.rowid, old.content);
           INSERT INTO document_fts(rowid, content) VALUES (new.rowid, new.content);
         END;
-        """)
+        """
+    )
 
 
 def _create_vss_index(db: sqlite3.Connection, embedding_dims: int):
     """Creates the vss index table and triggers if they do not already exist."""
 
     # TODO: look at parameterising the configuration to allow for custom tokenizers, etc.
-    db.execute(f"""
+    db.execute(
+        f"""
             CREATE VIRTUAL TABLE IF NOT EXISTS document_vss
             USING vss0(embedding({embedding_dims}));
-        """.format(embedding_dims=embedding_dims))
+        """.format(
+            embedding_dims=embedding_dims
+        )
+    )
 
     # Creates triggers that update the index when the documents are added/removed/updated
-    db.execute("""
+    db.execute(
+        """
             CREATE TRIGGER IF NOT EXISTS document_ai_vss AFTER INSERT ON document BEGIN
                 INSERT INTO document_vss(rowid, embedding) VALUES (new.rowid, new.embedding);
             END;
-        """)
-    db.execute("""
+        """
+    )
+    db.execute(
+        """
         CREATE TRIGGER IF NOT EXISTS document_ad_vss AFTER DELETE ON document BEGIN
           INSERT INTO document_vss(document_vss, rowid, embedding) VALUES('delete', old.rowid, old.embedding);
         END;
-        """)
-    db.execute("""
+        """
+    )
+    db.execute(
+        """
         CREATE TRIGGER IF NOT EXISTS document_au_vss AFTER UPDATE ON document BEGIN
           INSERT INTO document_vss(document_vss, rowid, embedding) VALUES('delete', old.rowid, old.embedding);
           INSERT INTO document_vss(rowid, embedding) VALUES (new.rowid, new.embedding);
         END;
-        """)
+        """
+    )

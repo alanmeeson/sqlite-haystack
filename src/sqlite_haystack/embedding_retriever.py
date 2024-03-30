@@ -15,11 +15,11 @@ class SQLiteEmbeddingRetriever:
     """
 
     def __init__(
-            self,
-            document_store: SQLiteDocumentStore,
-            filters: Optional[Dict[str, Any]] = None,
-            top_k: Optional[int] = 10,
-            num_candidates: Optional[int] = 100,
+        self,
+        document_store: SQLiteDocumentStore,
+        filters: Optional[Dict[str, Any]] = None,
+        top_k: Optional[int] = 10,
+        num_candidates: Optional[int] = 100,
     ):
         """
         Create the SQLiteEmbeddingRetriever component.
@@ -38,7 +38,7 @@ class SQLiteEmbeddingRetriever:
 
         self._document_store = document_store
 
-        if top_k <= 0:
+        if top_k and top_k <= 0:
             err = f"top_k must be greater than 0. Currently, top_k is {top_k}"
             raise ValueError(err)
 
@@ -52,11 +52,11 @@ class SQLiteEmbeddingRetriever:
 
     @component.output_types(documents=List[Document])
     def run(
-            self,
-            query_embedding: List[float],
-            filters: Optional[Dict[str, Any]] = None,
-            top_k: Optional[int] = None,
-            num_candidates: Optional[int] = 100,
+        self,
+        query_embedding: List[float],
+        filters: Optional[Dict[str, Any]] = None,
+        top_k: Optional[int] = None,
+        num_candidates: Optional[int] = 100,
     ):
         """
         Run the InMemoryEmbeddingRetriever on the given input data.

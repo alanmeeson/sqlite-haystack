@@ -4,8 +4,9 @@
 from unittest.mock import Mock, patch
 
 from haystack.dataclasses import Document
-from sqlite_haystack.embedding_retriever import SQLiteEmbeddingRetriever
+
 from sqlite_haystack.document_store import SQLiteDocumentStore
+from sqlite_haystack.embedding_retriever import SQLiteEmbeddingRetriever
 
 
 def test_init_default():
@@ -14,7 +15,7 @@ def test_init_default():
     assert retriever._document_store == mock_store
     assert retriever._filters == {}
     assert retriever._top_k == 10
-    assert retriever._num_candidates is None
+    assert retriever._num_candidates == 100
 
 
 @patch("sqlite_haystack.document_store.SQLiteDocumentStore")
@@ -40,6 +41,7 @@ def test_to_dict(_mock_elasticsearch_client):
             "num_candidates": 50,
         },
     }
+
 
 @patch("sqlite_haystack.document_store.SQLiteDocumentStore")
 def test_from_dict(_mock_elasticsearch_client):
@@ -71,7 +73,7 @@ def test_run():
         query_embedding=[0.5, 0.7],
         filters={},
         top_k=10,
-        num_candidates=None,
+        num_candidates=100,
     )
     assert len(res) == 1
     assert len(res["documents"]) == 1

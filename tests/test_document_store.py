@@ -1,12 +1,13 @@
 # SPDX-FileCopyrightText: 2024-present Alan Meeson <am@carefullycalculated.co.uk>
 #
 # SPDX-License-Identifier: Apache-2.0
-import pytest
 from typing import List
+
+import pytest
 from haystack.dataclasses import Document
 from haystack.document_stores.errors import DuplicateDocumentError
-from haystack.testing.document_store import DocumentStoreBaseTests
 from haystack.document_stores.types import DocumentStore, DuplicatePolicy
+from haystack.testing.document_store import DocumentStoreBaseTests
 
 from sqlite_haystack.document_store import SQLiteDocumentStore
 
@@ -23,11 +24,7 @@ class TestSQLiteDocumentStore(DocumentStoreBaseTests):
         This is the most basic requirement for the child class: provide
         an instance of this document store so the base class can use it.
         """
-        return SQLiteDocumentStore(
-            database=":memory:",
-            use_bm25=True,
-            embedding_dims=384
-        )
+        return SQLiteDocumentStore(database=":memory:", use_bm25=True, embedding_dims=384)
 
     def test_write_documents(self, document_store: DocumentStore):
         """
@@ -45,7 +42,7 @@ class TestSQLiteDocumentStore(DocumentStoreBaseTests):
         Assert that two lists of Documents are equivalent; or rather, equal but not necessarily the same order.
         """
         recv = received.sort(key=lambda x: x.id)
-        exp = received.sort(key=lambda x: x.id)
+        exp = expected.sort(key=lambda x: x.id)
         assert recv == exp
 
     def test_not_operator(self, document_store, filterable_docs):

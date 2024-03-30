@@ -15,12 +15,12 @@ class SQLiteBM25Retriever:
     """
 
     def __init__(
-            self,
-            document_store: SQLiteDocumentStore,
-            filters: Optional[Dict[str, Any]] = None,
-            top_k: Optional[int] = 10,
-            *,
-            scale_score: Optional[bool] = False,
+        self,
+        document_store: SQLiteDocumentStore,
+        filters: Optional[Dict[str, Any]] = None,
+        top_k: Optional[int] = 10,
+        *,
+        scale_score: Optional[bool] = False,
     ):
         """
         Create an SQLiteBM25Retriever component. Usually you pass some basic configuration
@@ -41,21 +41,21 @@ class SQLiteBM25Retriever:
 
         self._document_store = document_store
 
-        if top_k <= 0:
+        if top_k and top_k <= 0:
             err = f"top_k must be greater than 0. Currently, the top_k is {top_k}"
             raise ValueError(err)
 
         self._filters = filters if filters else {}
-        self._top_k = top_k
+        self._top_k = top_k if top_k else 10
         self._scale_score = scale_score
 
     @component.output_types(documents=List[Document])
     def run(
-            self,
-            query: str,
-            filters: Optional[Dict[str, Any]] = None,
-            top_k: Optional[int] = None,
-            scale_score: Optional[bool] = None,
+        self,
+        query: str,
+        filters: Optional[Dict[str, Any]] = None,
+        top_k: Optional[int] = None,
+        scale_score: Optional[bool] = None,
     ):
         """
         Run the SQLiteBM25Retriever on the given input data.
