@@ -95,3 +95,8 @@ In no particular order:
 
   Similarly, for the vss_search step,  we currently only provide a limit on the number of documents to retrieve.  There
   are probably more configuration options worth exposing.
+
+## Limitations
+
+- 1GB limit to the vector index size.
+- Not available for Windows:  The sqlite-vss package currently doesn't have a windows release, so neither does this.
