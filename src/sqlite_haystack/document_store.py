@@ -470,14 +470,7 @@ def _create_vss_index(db: sqlite3.Connection, embedding_dims: int):
     """Creates the vss index table and triggers if they do not already exist."""
 
     # TODO: look at parameterising the configuration to allow for custom tokenizers, etc.
-    db.execute(
-        f"""
-            CREATE VIRTUAL TABLE IF NOT EXISTS document_vss
-            USING vss0(embedding({embedding_dims}));
-        """.format(
-            embedding_dims=embedding_dims
-        )
-    )
+    db.execute(f"""CREATE VIRTUAL TABLE IF NOT EXISTS document_vss USING vss0(embedding({embedding_dims}));""")
 
     # Creates triggers that update the index when the documents are added/removed/updated
     db.execute(
@@ -490,14 +483,14 @@ def _create_vss_index(db: sqlite3.Connection, embedding_dims: int):
     db.execute(
         """
         CREATE TRIGGER IF NOT EXISTS document_ad_vss AFTER DELETE ON document BEGIN
-          INSERT INTO document_vss(document_vss, rowid, embedding) VALUES('delete', old.rowid, old.embedding);
+          DELETE FROM document_vss WHERE rowid = old.rowid;
         END;
         """
     )
     db.execute(
         """
         CREATE TRIGGER IF NOT EXISTS document_au_vss AFTER UPDATE ON document BEGIN
-          INSERT INTO document_vss(document_vss, rowid, embedding) VALUES('delete', old.rowid, old.embedding);
+          DELETE FROM document_vss WHERE rowid = old.rowid;
           INSERT INTO document_vss(rowid, embedding) VALUES (new.rowid, new.embedding);
         END;
         """
