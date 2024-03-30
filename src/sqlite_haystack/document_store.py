@@ -436,9 +436,9 @@ def _create_bm25_index(db: sqlite3.Connection):
     #    """)
     db.execute(
         """
-                CREATE VIRTUAL TABLE IF NOT EXISTS document_fts
-                USING fts5("id", "content", tokenize = 'trigram', content='document', content_rowid='rowid');
-            """
+            CREATE VIRTUAL TABLE IF NOT EXISTS document_fts
+            USING fts5("id", "content", tokenize = 'trigram', content='document', content_rowid='rowid');
+        """
     )
 
     # Creates triggers that update the index when the documents are added/removed/updated
