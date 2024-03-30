@@ -25,7 +25,7 @@ def test_init_default():
         assert retriever._num_candidates == 100
     else:
         # If we can't then we test the "This optional component is disabled" logic
-        with pytest.raises(NotImplemented):
+        with pytest.raises(NotImplementedError):
             _ = SQLiteVSSEmbeddingRetriever(document_store=store)
 
 
@@ -79,7 +79,7 @@ def test_from_dict():
         assert retriever._num_candidates == 50
         assert retriever._embedding_dims == 2
     else:
-        with pytest.raises(NotImplemented):
+        with pytest.raises(NotImplementedError):
             _ = SQLiteVSSEmbeddingRetriever.from_dict(data)
 
 
