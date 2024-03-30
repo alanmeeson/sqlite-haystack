@@ -1,21 +1,19 @@
 # SPDX-FileCopyrightText: 2024-present Alan Meeson <am@carefullycalculated.co.uk>
 #
 # SPDX-License-Identifier: Apache-2.0
+import importlib.util
+
 import pytest
 from haystack.dataclasses import Document
 
 from sqlite_haystack.document_store import SQLiteDocumentStore
 from sqlite_haystack.embedding_retriever import SQLiteVSSEmbeddingRetriever
 
-
 # TODO: see if there's a cleaner way of testing an optional package that won't be available on all environments
 
+
 def test_init_default():
-    try:
-        import sqlite_vss
-        do_test = True
-    except ImportError:
-        do_test = False
+    do_test = importlib.util.find_spec("sqlite_vss") is not None
 
     store = SQLiteDocumentStore(":memory:")
     if do_test:
@@ -28,15 +26,11 @@ def test_init_default():
     else:
         # If we can't then we test the "This optional component is disabled" logic
         with pytest.raises(NotImplemented):
-            retriever = SQLiteVSSEmbeddingRetriever(document_store=store)
+            _ = SQLiteVSSEmbeddingRetriever(document_store=store)
 
 
 def test_to_dict():
-    try:
-        import sqlite_vss
-        do_test = True
-    except ImportError:
-        do_test = False
+    do_test = importlib.util.find_spec("sqlite_vss") is not None
 
     if do_test:
         document_store = SQLiteDocumentStore(":memory:")
@@ -61,11 +55,7 @@ def test_to_dict():
 
 
 def test_from_dict():
-    try:
-        import sqlite_vss
-        expect_not_implemented = False
-    except ImportError:
-        expect_not_implemented = True
+    do_test = importlib.util.find_spec("sqlite_vss") is not None
 
     data = {
         "type": "sqlite_haystack.embedding_retriever.SQLiteVSSEmbeddingRetriever",
@@ -81,24 +71,20 @@ def test_from_dict():
         },
     }
 
-    if expect_not_implemented:
-        with pytest.raises(NotImplemented):
-            retriever = SQLiteVSSEmbeddingRetriever.from_dict(data)
-    else:
+    if do_test:
         retriever = SQLiteVSSEmbeddingRetriever.from_dict(data)
         assert retriever._document_store
         assert retriever._filters == {}
         assert retriever._top_k == 10
         assert retriever._num_candidates == 50
         assert retriever._embedding_dims == 2
+    else:
+        with pytest.raises(NotImplemented):
+            _ = SQLiteVSSEmbeddingRetriever.from_dict(data)
 
 
 def test_run():
-    try:
-        import sqlite_vss
-        do_test = True
-    except ImportError:
-        do_test = False
+    do_test = importlib.util.find_spec("sqlite_vss") is not None
 
     if do_test:
         store = SQLiteDocumentStore(":memory:")
@@ -109,4 +95,3 @@ def test_run():
         assert len(res) == 1
         assert len(res["documents"]) == 1
         assert res["documents"][0].content == "Test doc"
-
