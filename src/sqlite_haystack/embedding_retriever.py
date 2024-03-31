@@ -230,3 +230,7 @@ except ImportError:
     class SQLiteVSSEmbeddingRetriever:  # type: ignore
         def __init__(self, *args, **kwargs):
             raise NotImplementedError
+
+        @classmethod
+        def from_dict(cls, *args, **kwargs):
+            raise NotImplementedError

@@ -27,9 +27,6 @@ jobs:
         python-version: ['3.9', '3.10']
 
     steps:
-    - name: Install sqlite-vss on linux
-      if: matrix.os == 'ubuntu-latest'
-      run: pip install sqlite-vss
     - name: Support longpaths
       if: matrix.os == 'windows-latest'
       run: git config --system core.longpaths true
@@ -40,6 +37,10 @@ jobs:
       uses: actions/setup-python@v4
       with:
         python-version: ${{ matrix.python-version }}
+
+    - name: Install sqlite-vss on linux
+      if: matrix.os == 'ubuntu-latest'
+      run: pip install sqlite-vss
 
     - name: Install Hatch
       run: pip install --upgrade hatch
