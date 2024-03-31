@@ -7,7 +7,7 @@ SQLite-Haystack is an embedded [SQLite](https://sqlite.org) backed Document Stor
 Currently supported features are:
 - Embedded database for in memory or on disk use.
 - BM25 Free Text Search using [SQLite FTS5](https://sqlite.org/fts5.html)
-- Bring-your-own-embedding vector search using [SQLite](https://github.com/asg017/sqlite-vss)
+- Bring-your-own-embedding vector search using [SQLite](https://github.com/asg017/sqlite-vss); available on Linux only.
 
 ## Installation
 
@@ -18,6 +18,8 @@ The current simplest way to get SQLite-Haystack is to install from GitHub via pi
 ## Usage
 
 See the example in `examples/pipeline-usage.ipynb`
+
+Warning: make sure you instantiate the retriever before ingesting documents so that it can setup the index.
 
 ## Development
 
@@ -85,18 +87,20 @@ In no particular order:
   [this article](https://sqldocs.org/sqlite/sqlite-json-data/).  For bonus points, we could keep a track of the fields
   used for filtering, and automatically create indexes for fields that are used over a certain number of times.
 
-- **Make the tokenizer used in the FTS/BM25 index configurable**
-  
-  Currently the FTS is using a plain `trigram` tokeniser.  There are other options, such as porter stemming, and further
-  tricks that can be applied as part of the FTS process.  Ideally, we want to make this user configurable, so that users
-  can tailor the method used to their use case.
+- **Make a Vector search that can work without sqlite-vss for use on windows/macos**
 
-- **Investigate making the VSS configurable.**
+  Adapt the vector search that was used in the InMemoryDocumentStore to apply to a set of documents after a filter 
+  lookup.  It wouldn't be efficient, but it would do for small projects and prototypes.
 
-  Similarly, for the vss_search step,  we currently only provide a limit on the number of documents to retrieve.  There
-  are probably more configuration options worth exposing.
+- **Make it possible to add a retriever to an existing DocumentStore**
+
+  Presently, it is necessary to add the retrievers to the DocumentStore before ingesting documents so that they can
+  setup the triggers to add the documents to the index.  This is a bit of a pain, so perhaps make either a classmethod 
+  to do that,  or make the retrievers to an index repair when they're added if necessary. 
 
 ## Limitations
 
 - 1GB limit to the vector index size.
-- Not available for Windows:  The sqlite-vss package currently doesn't have a windows release, so neither does this.
+- Embedding search is not available for windows or macos, as sqlite-vss seems to have trouble on those.  If you can
+  install that library on those platforms, it should work though.
+- Retriever has to be setup before documents are ingested so that documents get added to index.
