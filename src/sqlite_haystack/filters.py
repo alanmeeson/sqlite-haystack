@@ -11,7 +11,6 @@ from itertools import chain
 from typing import Any, Dict, List
 
 from haystack.errors import FilterError
-from pandas import DataFrame
 
 NO_VALUE = "no_value"
 
@@ -86,12 +85,6 @@ def _parse_comparison_condition(condition: Dict[str, Any]) -> tuple[str, List[An
         raise FilterError(msg)
 
     value: Any = condition["value"]
-    if isinstance(value, DataFrame):
-        # DataFrames are stored as JSONB and we query them as such
-        value = value.to_json()
-        # Note: not using Jsonb, but just json
-        # field = f"({field})::jsonb"
-
     if field.startswith("meta."):
         field = _treat_meta_field(field, value)
 
