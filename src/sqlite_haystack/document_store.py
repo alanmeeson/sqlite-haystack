@@ -149,18 +149,18 @@ class SQLiteDocumentStore(DocumentStore):
 
         if policy == DuplicatePolicy.OVERWRITE:
             command = """
-                INSERT OR REPLACE INTO document(id, content, dataframe, blob, meta, score, embedding)
-                VALUES (?,?,?,?,?,?,?);
+                INSERT OR REPLACE INTO document(id, content, blob, meta, score, embedding)
+                VALUES (?,?,?,?,?,?);
             """
         elif policy == DuplicatePolicy.SKIP:
             command = """
-                INSERT OR IGNORE INTO document(id, content, dataframe, blob, meta, score, embedding)
-                VALUES (?,?,?,?,?,?,?);
+                INSERT OR IGNORE INTO document(id, content, blob, meta, score, embedding)
+                VALUES (?,?,?,?,?,?);
             """
         elif policy == DuplicatePolicy.FAIL:
             command = """
-                INSERT OR FAIL INTO document(id, content, dataframe, blob, meta, score, embedding)
-                VALUES (?,?,?,?,?,?,?);
+                INSERT OR FAIL INTO document(id, content, blob, meta, score, embedding)
+                VALUES (?,?,?,?,?,?);
             """
 
         doc_dicts = (doc.to_dict(flatten=False) for doc in documents)
@@ -168,7 +168,6 @@ class SQLiteDocumentStore(DocumentStore):
             (
                 doc["id"],
                 doc["content"],
-                doc["dataframe"],
                 doc["blob"],
                 json.dumps(doc["meta"]),
                 doc["score"],
@@ -238,7 +237,6 @@ def _create_db(database: Union[str, os.PathLike]) -> sqlite3.Connection:
             CREATE TABLE IF NOT EXISTS document(
                 id TEXT NOT NULL PRIMARY KEY,
                 content TEXT,
-                dataframe JSON,
                 blob BLOB,
                 meta JSON,
                 score FLOAT,

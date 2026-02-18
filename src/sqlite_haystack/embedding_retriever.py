@@ -101,9 +101,9 @@ try:
                 params.append(top_k)
 
             query_statement = f"""
-                    SELECT a.id, a.content, a.dataframe, a.blob, a.meta, b.score, a.embedding
+                    SELECT a.id, a.content, a.blob, a.meta, b.score, a.embedding
                     FROM (
-                        SELECT rowid, id, content, dataframe, blob, meta, embedding FROM document
+                        SELECT rowid, id, content, blob, meta, embedding FROM document
                         {filter_subclause}
                     ) a
                     INNER JOIN (

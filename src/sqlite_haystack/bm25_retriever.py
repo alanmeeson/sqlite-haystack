@@ -116,7 +116,7 @@ class SQLiteBM25Retriever:
             filter_subclause = f"WHERE {filter_query}"
             params.extend(list(filter_params))
 
-        main_selection_clause = "a.id, a.content, a.dataframe, a.blob, a.meta, b.score, a.embedding"
+        main_selection_clause = "a.id, a.content, a.blob, a.meta, b.score, a.embedding"
         rank_section_clause = "id, rank as score"
         if self._snippet:
             main_selection_clause += ", b._snippet"
